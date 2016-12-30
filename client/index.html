@@ -1,0 +1,237 @@
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Forester</title>
+
+  </head>
+  <body>
+    <div id="signDiv">
+    	Username: <input id="signDiv-username" type="text"></input><br>
+    	Password: <input id="signDiv-password" type="password"></input>
+    	<button id="signDiv-signIn">Sign In</button>
+    	<button id="signDiv-signUp">Sign Up</button>
+    </div>
+    <div id="waitDiv" style="display:none;">
+    	<div id="waiter-text">
+    	</div>
+    </div>
+    <div id="gameDiv" style="display:none;">
+    	<canvas id="ctxId" width="500" height="500" style="border:1px solid #000000;"></canvas>
+
+
+    </div>
+
+  </body>
+
+  <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+  <script>
+    var waiterText = document.getElementById('waiter-text');
+
+
+  	var ctxElem = document.getElementById("ctxId");
+    var ctx2D = ctxElem.getContext("2d");
+  	ctx2D.font = '30px Arial';
+
+    var socket = io();
+
+    //sign
+    var signDiv = document.getElementById('signDiv');
+    var signDivUsername = document.getElementById('signDiv-username');
+    var signDivSignIn = document.getElementById('signDiv-signIn');
+    var signDivSignUp = document.getElementById('signDiv-signUp');
+    var signDivPassword = document.getElementById('signDiv-password');
+
+    signDivSignIn.onclick = function(){
+      socket.emit('signIn',{username:signDivUsername.value,password:signDivPassword.value});
+    }
+    signDivSignUp.onclick = function(){
+      socket.emit('signUp',{username:signDivUsername.value,password:signDivPassword.value});
+    }
+    socket.on('signInResponse',function(data){
+      if(data.success){
+        signDiv.style.display = 'none';
+        waitDiv.style.display = 'inline-block';
+      } else
+        alert("Sign in unsuccessul.");
+    });
+    socket.on('signUpResponse',function(data){
+      if(data.success){
+        alert("Sign up successul.");
+      } else
+        alert("Sign up unsuccessul.");
+    });
+
+    //game
+    var groundColor = '#ffffff';
+
+    socket.on('players_ready',function(data){
+      var myTab = '';
+      myTab    = '<div>';
+      myTab   += '<p> Press P if you are ready </p>';
+      myTab   += '<div>';
+      myTab   += '<table>';
+      //for(var i in data){
+      data.forEach(function(dataP){
+        if (dataP.i == undefined){
+          myTab += '<tr>';
+          myTab += '<td> ' + dataP.name + '</td>';
+          myTab += '<td> ' + ((dataP.isReady==true)? 'Ready' : 'Waiting') + '</td>';
+          myTab += '</tr>';
+        } else {
+          myTab   += '<p> ' + dataP.i + ' </p>';
+        }
+      });
+      myTab   += '</table>';
+      waiterText.innerHTML = myTab;
+    });
+
+    socket.on('start_game', function(data){
+      console.log('Yolo');
+			waitDiv.style.display = 'none';
+			gameDiv.style.display = 'inline-block';
+      console.log('Canva ' + ctxElem.getBoundingClientRect().top + ' '  + ctxElem.getBoundingClientRect().left);
+      socket.emit('canvas_params', {top: ctxElem.getBoundingClientRect().top, left: ctxElem.getBoundingClientRect().left} );
+
+      document.title = 'Forester - ' + data.name + ' team : ' + data.team;
+
+      gameStart();
+    });
+
+    socket.on('game_already_running', function(){
+      alert('Sorry, the game are already running');
+    });
+
+    document.onkeydown = function(event){
+      if(event.keyCode === 32)	//SCPACE
+        socket.emit('keyPress',{inputId:'SPACE',state:true});
+      if(event.keyCode === 65)	//A
+        socket.emit('keyPress',{inputId:'A',state:true});
+      if(event.keyCode === 90)	//Z
+        socket.emit('keyPress',{inputId:'Z',state:true});
+      if(event.keyCode === 69)	//E
+        socket.emit('keyPress',{inputId:'E',state:true});
+      if(event.keyCode === 82)	//R
+        socket.emit('keyPress',{inputId:'R',state:true});
+      if(event.keyCode === 80)	//P
+        socket.emit('keyPress',{inputId:'P',state:true});
+    }
+    document.onkeyup = function(event){
+      if(event.keyCode === 32)	//SCPACE
+        socket.emit('keyPress',{inputId:'SPACE',state:false});
+      if(event.keyCode === 65)	//A
+        socket.emit('keyPress',{inputId:'A',state:false});
+      if(event.keyCode === 90)	//Z
+        socket.emit('keyPress',{inputId:'Z',state:false});
+      if(event.keyCode === 69)	//E
+        socket.emit('keyPress',{inputId:'E',state:false});
+      if(event.keyCode === 82)	//R
+        socket.emit('keyPress',{inputId:'R',state:false});
+      if(event.keyCode === 80)	//P
+        socket.emit('keyPress',{inputId:'P',state:false});
+    }
+
+
+    var gameStart = function(){
+      document.onmousedown = function(event){
+        var x = event.clientX;
+        var y = event.clientY;
+        socket.emit('cmd', {inputId:'mouse', state:true, x: x, y: y});
+      }
+      document.onmouseup = function(event){
+        socket.emit('cmd', {inputId:'mouse', state:false});
+      }
+
+      socket.on('update_player', function(data) {
+        draw_a_player(data);
+      });
+
+      socket.on('add_tree',function(data){
+        console.log('add_tree ');
+    		for(var i = 0 ; i < data.length; i++){
+          draw_a_tree(data[i]);
+        }
+    	});
+
+      socket.on('rm_tree',function(data){
+        console.log('rm_tree ');
+    		for(var i = 0 ; i < data.length; i++){
+          undraw_a_tree(data[i]);
+        }
+    	});
+
+    	socket.on('update_players',function(data){
+        console.log('update_players ');
+    		//ctx2D.clearRect(0,0,500,500);
+    		for(var i = 0 ; i < data.length; i++){
+          draw_a_player(data[i]);
+        }
+    	});
+
+    	socket.on('update_trees',function(data){
+        console.log('update_trees ');
+    		//ctx2D.clearRect(0,0,500,500);
+    		for(var i = 0 ; i < data.length; i++){
+          draw_a_tree(data[i]);
+        }
+    	});
+
+    	socket.on('newPositions',function(data){
+    		for(var i = 0 ; i < data.length; i++)
+    			ctx2D.fillText(data[i].number,data[i].x,data[i].y);
+    	});
+    }
+
+    draw_background = function() {
+      ctx2D.save();
+  		ctx2D.clearRect(0,0,500,500);
+      ctx2D.fillStyle = groundColor;
+      ctx2D.fill();
+      ctx2D.restore();
+    }
+
+    draw_a_player = function(data) {
+      ctx2D.save();
+      ctx2D.beginPath();
+      ctx2D.arc(data.x, data.y, 1, 0, 2*Math.PI, false);
+      ctx2D.fillStyle = 'red';
+      ctx2D.fill();
+      ctx2D.lineWidth = 2;
+      ctx2D.strokeStyle = '#ff0000'
+      ctx2D.stroke();
+      ctx2D.restore();
+    }
+
+    draw_a_tree = function(tree){
+      ctx2D.save();
+      ctx2D.beginPath();
+      ctx2D.arc(tree.x, tree.y, 5, 0, 2*Math.PI, false);
+      if ( tree.chopState > 0 ){
+        ctx2D.fillStyle = '#ddffdd'
+      } else {
+        ctx2D.fillStyle = '#00ab00'
+      }
+      ctx2D.fill();
+      ctx2D.lineWidth = 2;
+      ctx2D.strokeStyle = '#006f00'
+      ctx2D.stroke();
+      ctx2D.restore();
+    }
+    undraw_a_tree = function(tree){
+      ctx2D.save();
+      ctx2D.beginPath();
+      ctx2D.arc(tree.x, tree.y, 6, 0, 2*Math.PI, false);
+      ctx2D.fillStyle = groundColor;
+      ctx2D.fill();
+      ctx2D.lineWidth = 2;
+      ctx2D.strokeStyle = groundColor;
+      ctx2D.stroke();
+      ctx2D.restore();
+    }
+
+
+
+  </script>
+</html>
