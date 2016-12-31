@@ -65,16 +65,11 @@ function Player (params){
     if (self.socket != undefined){
       var target = {x: self.x_target, y: self.y_target};
       if (self.getDistance(self, target) < self.distChopping){
-        var the_tree = self.get_tree( target );
-        console.log('Tree to chop : ' + the_tree.chopState);
-        if (the_tree.chopState >= the_tree.resistance){
-          the_tree.toRemove = true;
-          //self.socket.emit('rm_tree', [the_tree]);
-          self.action = undefined;
+        var tree_target = self.get_tree( target );
+        if (tree_target != undefined){
+          tree_target.chop( self.chopping );
         } else {
-          the_tree.chopState += self.chopping;
-          the_tree.toUpdate = true;
-          //self.socket.emit('update_tree', [the_tree]);
+          self.action = undefined;
         }
       } else {
         self.move();

@@ -5,6 +5,7 @@ function Tree (params){
     id: params.x + '_' + params.y,
     team: params.team,
     age: params.age || 0,
+    ageMax: params.ageMax || 100,
     chopState: 0,
     resistance: 50,
     toRemove: false,
@@ -20,8 +21,17 @@ function Tree (params){
     self.grow();
   }
 
+  self.chop = function(chopping){
+    self.chopState += chopping;
+    self.toUpdate = true;
+    self.toRemove = (self.chopState >= self.resistance);
+  }
+
   self.grow = function(){
-    self.age = (self.age < 10) ? self.age + 1 : self.age;
+    if (self.age < self.ageMax) {
+      self.age += 1;
+      self.toUpdate = true;
+    }
   }
   return self;
 }

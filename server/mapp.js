@@ -48,36 +48,56 @@ function Mapp(params){
         var angle = 2*Math.PI*i_tree/n_trees;
         var x = base.x + self.baseMarging/2*Math.cos(angle);
         var y = base.y + self.baseMarging/2*Math.sin(angle);
-        var a_new_tree = Tree({x: x, y: y, team: base.team, age:10});
+        var a_new_tree = Tree({x: x, y: y, team: base.team, age:Math.random()*75});
         self.trees[a_new_tree.id] = a_new_tree;
       }
     }
   }
 
   self.update = function(){
+    var i = 0;
+    var log = '';
     for(var key in self.trees){
-      if (self.trees[key].toRemove){
+      // log += '  (' + i;
+      // log += ' ' + self.trees[key].chopState;
+      // log += ' ' + self.trees[key].toRemove;
+      // log += ' ' + self.trees[key].toUpdate;
+      // i ++;
+      if (self.trees[key].toRemove && !self.trees[key].toUpdate){
         delete self.trees[key];
       } else {
         self.trees[key].update();
       }
     }
+    // console.log(log);
   }
 
   self.get_tree = function(coord){
     return self.trees[ coord.x + '_' + coord.y ];
   }
-  
+
   self.add_a_tree = function(a_new_tree){
     self.trees[a_new_tree.id] = a_new_tree;
     self.trees[a_new_tree.id].toUpdate = true;
+  }
+
+  self.pack_trees_to_remove = function(){
+    var pack = [];
+    for(var key in self.trees){
+      var tree = self.trees[key];
+      if (tree.toRemove){
+        pack.push(tree);
+        tree.toUpdate = false;
+      }
+    }
+    return pack;
   }
 
   self.pack_trees_to_update = function(){
     var pack = [];
     for(var key in self.trees){
       var tree = self.trees[key];
-      if (tree.toUpdate || tree.toRemove){
+      if (tree.toUpdate){
         pack.push(tree);
         tree.toUpdate = false;
       }

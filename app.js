@@ -42,20 +42,16 @@ io.sockets.on('connection', function(socket){
 		//isValidPassword(data,function(res){
 		//	if(res){
 		isUsernameTaken(data,function(res){
-			if(!res){
+			if(!res && a_game.state == 0){
 				socket.emit('signInResponse',{success:true});
-				if (a_game.state == 0){
-					a_game.connect({name: data.username, socket: socket});
+				a_game.connect({name: data.username, socket: socket});
 
-					socket.on('disconnect',function(){
-						a_game.disconnect( socket.id );
-					});
-				} else {
-					socket.emit('game_already_running');
-				}
+				socket.on('disconnect',function(){
+					a_game.disconnect( socket.id );
+				});
 
 			} else {
-				socket.emit('signInResponse',{success:false});
+				socket.emit('signInResponse',{success:false, game_state: a_game.state});
 			}
 		});
 	});

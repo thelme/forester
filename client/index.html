@@ -33,7 +33,7 @@
 
   	var ctxElem = document.getElementById("ctxId");
     var ctx2D = ctxElem.getContext("2d");
-  	ctx2D.font = '30px Arial';
+  	ctx2D.font = '12px Arial';
 
     var socket = io();
 
@@ -54,8 +54,13 @@
       if(data.success){
         signDiv.style.display = 'none';
         waitDiv.style.display = 'inline-block';
-      } else
-        alert("Sign in unsuccessul.");
+      } else {
+        if (data.game_state == 0){
+          alert("Bah nan, le pseudo est deja pris.");
+        } else {
+          alert("Game already began.");
+        }
+      }
     });
     socket.on('signUpResponse',function(data){
       if(data.success){
@@ -144,24 +149,6 @@
         socket.emit('cmd', {inputId:'mouse', state:false});
       }
 
-      socket.on('update_player', function(data) {
-        draw_a_player(data);
-      });
-
-      socket.on('add_tree',function(data){
-        console.log('add_tree ');
-    		for(var i = 0 ; i < data.length; i++){
-          draw_a_tree(data[i]);
-        }
-    	});
-
-      socket.on('rm_tree',function(data){
-        console.log('rm_tree ');
-    		for(var i = 0 ; i < data.length; i++){
-          undraw_a_tree(data[i]);
-        }
-    	});
-
     	socket.on('update_players',function(data){
         console.log('update_players ');
     		//ctx2D.clearRect(0,0,500,500);
@@ -178,9 +165,11 @@
         }
     	});
 
-    	socket.on('newPositions',function(data){
-    		for(var i = 0 ; i < data.length; i++)
-    			ctx2D.fillText(data[i].number,data[i].x,data[i].y);
+    	socket.on('remove_trees',function(data){
+        console.log('remove_trees ');
+    		for(var i = 0 ; i < data.length; i++){
+          undraw_a_tree(data[i]);
+        }
     	});
     }
 
@@ -193,13 +182,21 @@
     }
 
     draw_a_player = function(data) {
+      //ctx2D.fillText(data[i].name,data.x+2,data.y+2);
       ctx2D.save();
       ctx2D.beginPath();
-      ctx2D.arc(data.x, data.y, 1, 0, 2*Math.PI, false);
-      ctx2D.fillStyle = 'red';
+      ctx2D.arc(data.x, data.y, 2, 0, 2*Math.PI, false);
+      if (data.team == 0)
+        ctx2D.fillStyle = '#489edf';
+      else if (data.team == 1)
+        ctx2D.fillStyle = '#d64e4e';
+      else if (data.team == 2)
+        ctx2D.fillStyle = '#fbf22d';
+      else if (data.team == 3)
+        ctx2D.fillStyle = '#eb84ff';
       ctx2D.fill();
-      ctx2D.lineWidth = 2;
-      ctx2D.strokeStyle = '#ff0000'
+      ctx2D.lineWidth = 1;
+      ctx2D.strokeStyle = '#333333'
       ctx2D.stroke();
       ctx2D.restore();
     }
@@ -207,22 +204,34 @@
     draw_a_tree = function(tree){
       ctx2D.save();
       ctx2D.beginPath();
-      ctx2D.arc(tree.x, tree.y, 5, 0, 2*Math.PI, false);
-      if ( tree.chopState > 0 ){
-        ctx2D.fillStyle = '#ddffdd'
+      if (tree.age == tree.ageMax){
+        ctx2D.arc(tree.x, tree.y, 5, 0, 2*Math.PI, false);
       } else {
-        ctx2D.fillStyle = '#00ab00'
+        ctx2D.arc(tree.x, tree.y, 5, 0, 2*Math.PI*(tree.age/tree.ageMax), false);
       }
+      if (tree.team == 0)
+        ctx2D.fillStyle = '#489edf';
+      else if (tree.team == 1)
+        ctx2D.fillStyle = '#d64e4e';
+      else if (tree.team == 2)
+        ctx2D.fillStyle = '#fbf22d';
+      else if (tree.team == 3)
+        ctx2D.fillStyle = '#eb84ff';
       ctx2D.fill();
-      ctx2D.lineWidth = 2;
-      ctx2D.strokeStyle = '#006f00'
+      if ( tree.chopState == 0 ){
+        ctx2D.lineWidth = 2;
+        ctx2D.strokeStyle = '#84d055'
+      } else {
+        ctx2D.lineWidth = 3;
+        ctx2D.strokeStyle = '#306012'
+      }
       ctx2D.stroke();
       ctx2D.restore();
     }
     undraw_a_tree = function(tree){
       ctx2D.save();
       ctx2D.beginPath();
-      ctx2D.arc(tree.x, tree.y, 6, 0, 2*Math.PI, false);
+      ctx2D.arc(tree.x, tree.y, 8, 0, 2*Math.PI, false);
       ctx2D.fillStyle = groundColor;
       ctx2D.fill();
       ctx2D.lineWidth = 2;

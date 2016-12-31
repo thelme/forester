@@ -24,14 +24,24 @@ function Game(params){
   }
 
   self.attributeTeam = function(){
-    console.log('attributeTeam ' + self.n_team);
     var i = -1;
+    var n_by_team = Math.ceil( (Object.keys(self.players).length/self.n_team ) );
+    //var i_by_team = {};
     for(var key in self.players){
       i++;
-      self.players[key].team = i%self.n_team;
-      console.log(self.players[key].name + ' : ' + self.players[key].team);
+      var i_team = i%self.n_team;
+      //i_by_team[i_team] += 1;
+      //var angle = 2*Math.PI*i_by_team[i_team]/n_by_team;
+      var x = self.mapp.bases[i_team].x; // + (2*self.mapp.baseMarging/3)*Math.cos(angle);
+      var y = self.mapp.bases[i_team].y; // + (2*self.mapp.baseMarging/3)*Math.sin(angle);
+
+      self.players[key].team = i_team;
+      self.players[key].x = x;
+      self.players[key].y = y;
+      //console.log(self.players[key].name + ' team : ' + i_team + ' x : ' + x + ' y : ' + y);
     }
   }
+
 
   self.connect = function(data){
     console.log('[GAME] Hello ' + data.name );
@@ -103,15 +113,19 @@ function Game(params){
       if (Object.keys(self.players).length != 0){
         self.update_player();
         self.mapp.update();
-        var pack_trees   = self.mapp.pack_trees_to_update();
-        var pack_players = self.pack_players_to_update();
-        if (pack_trees.length != 0){
-          console.log('Tree to up ' + pack_trees.length);
+        var pack_trees    = self.mapp.pack_trees_to_update();
+        var pack_trees_rm = self.mapp.pack_trees_to_remove();
+        var pack_players  = self.pack_players_to_update();
+
+        if (pack_trees.length != 0)
           self.io.sockets.emit('update_trees', pack_trees);
-        }
-        if (pack_players.length != 0){
+
+        if (pack_trees_rm.length != 0)
+          self.io.sockets.emit('remove_trees', pack_trees_rm);
+
+        if (pack_players.length != 0)
           self.io.sockets.emit('update_players', pack_players);
-        }
+
 
       } else {
         self.state = WAIT4PLAYSERS;
@@ -122,7 +136,7 @@ function Game(params){
   			var all_ready = 1;
   			for(var key in self.players){
   				pack.push( {name: self.players[key].name, isReady: self.players[key].isReady} );
-  				all_ready = (self.players[key].isReady) ? all_ready : 0
+  				all_ready = (self.players[key].isReady) ? all_ready : 0;
   			}
   			if(all_ready != 0){
   				if (self.i_all_ready > 0){
@@ -133,7 +147,6 @@ function Game(params){
 
   					self.init();
             for (var key in self.players){
-              console.log('Game ' + self.players[key].name );
   					  self.players[key].socket.emit('start_game', {name: self.players[key].name, team:self.players[key].team});
             }
   				}
