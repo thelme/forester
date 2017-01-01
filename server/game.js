@@ -51,7 +51,7 @@ function Game(params){
 
   self.disconnect = function(id){
     console.log('[GAME] Bye bye ' + self.players[id].name);
-    delete self.players[id];
+    self.players[id].toRemove = true;
     if (Object.keys(self.players).length == 0){
       console.log('Il ne reste plus personne');
       self.state = WAIT4PLAYSERS;
@@ -102,9 +102,26 @@ function Game(params){
     return pack;
   }
 
+
+  self.pack_players_to_remove = function(){
+    var pack = [];
+    for(var key in self.players){
+      var player = self.players[key];
+      if (player.toRemove){
+        pack.push(player.externaler());
+        player.toRemove = 2;
+      }
+    }
+    return pack;
+  }
+
   self.update_player = function(){
     for(var key in self.players){
-      self.players[key].update();
+      if (player.toRemove == 2){
+        delete self.players[key];
+      } else {
+        self.players[key].update();
+      }
     }
   }
 
@@ -113,19 +130,17 @@ function Game(params){
       if (Object.keys(self.players).length != 0){
         self.update_player();
         self.mapp.update();
-        var pack_trees    = self.mapp.pack_trees_to_update();
-        var pack_trees_rm = self.mapp.pack_trees_to_remove();
-        var pack_players  = self.pack_players_to_update();
+        var pack_update    = self.mapp.pack_trees_to_update();
+        pack_update.concat( self.pack_players_to_update() );
 
-        if (pack_trees.length != 0)
-          self.io.sockets.emit('update_trees', pack_trees);
+        var pack_remove = self.mapp.pack_trees_to_remove();
+        pack_remove.concat( self.pack_players_to_remove() );
 
-        if (pack_trees_rm.length != 0)
-          self.io.sockets.emit('remove_trees', pack_trees_rm);
+        if (pack_update.length != 0)
+          self.io.sockets.emit('update', pack_update);
 
-        if (pack_players.length != 0)
-          self.io.sockets.emit('update_players', pack_players);
-
+        if (pack_remove.length != 0)
+          self.io.sockets.emit('remove', pack_trees_rm);
 
       } else {
         self.state = WAIT4PLAYSERS;

@@ -1,36 +1,29 @@
-
+var Entity = require("./entity.js").Entity;
 var Tree = require("./tree.js").Tree;
 
 function Player (params){
-  var self = {
-    name: params.name || 'bob',
-    team: params.team || -1,
-    x: params.x || -1,
-    y: params.y || -1,
-    x_target: -1,
-    y_target: -1,
-    action: undefined,
-    pressingMouse: false,
-    mouseAngle: false,
-    isReady: false,
-    hp: 100,
-    speed: 10,
-    chopping: 1,
-    distPlanting: 20,
-    distChopping: 15,
-    actionA: false,
-    actionZ: false,
-    actionE: false,
-    actionR: false,
-    type: 'Player',
-    toUpdate: true,
-    socket: params.socket,
-    margingTop : 0,
-    margingLeft : 0,
-    whatIsOn : params.whatIsOn,
-    add_a_tree: params.add_a_tree,
-    get_tree: params.get_tree,
-  }
+  var self = Entity(params);
+  self.x_target = -1;
+  self.y_target = -1;
+  self.action = undefined;
+  self.pressingMouse = false;
+  self.mouseAngle = false;
+  self.isReady = false;
+  self.hp = 100;
+  self.speed = 10;
+  self.chopping = 1;
+  self.distPlanting = 20;
+  self.distChopping = 15;
+  self.actionA = false;
+  self.actionZ = false;
+  self.actionE = false;
+  self.actionR = false;
+  self.socket = params.socket;
+  self.margingTop  = 0;
+  self.margingLeft  = 0;
+  self.whatIsOn  = params.whatIsOn;
+  self.add_a_tree = params.add_a_tree;
+  self.get_tree = params.get_tree;
 
   self.update = function(){
     if (self.action != undefined)
@@ -45,7 +38,7 @@ function Player (params){
         self.x += (self.speed*(self.x_target-self.x)/dist);
         self.y += (self.speed*(self.y_target-self.y)/dist);
         self.toUpdate = true;
-        //self.socket.emit('update_player', {x: self.x, y: self.y});
+        //self.socket.emit('update_player'; {x: self.x; y: self.y});
       }
     }
   }
@@ -94,7 +87,7 @@ function Player (params){
   }
 
   self.onConnect = function(){
-    self.socket.on('canvas_params',function(data){
+    self.socket.on('canvas_params', function(data){
       self.margingTop  = data.top;
       self.margingLeft = data.left;
     });
