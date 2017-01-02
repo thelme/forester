@@ -1,3 +1,7 @@
+
+console.log('Entity file');
+
+
 function Entity (params){
   var self = {
     x: params.x,

@@ -1,6 +1,5 @@
-var Player = require("./tree.js").Player;
-var Player = require("./player.js").Player;
 
+console.log('Game file');
 
 var ctxElem = document.getElementById("ctxId");
 var ctx2D = ctxElem.getContext("2d");
@@ -9,7 +8,6 @@ ctx2D.font = '12px Arial';
 var groundColor = '#ffffff';
 
 var socket = io();
-
 var waiterText = document.getElementById('waiter-text');
 
 //===========================================================================[SIGN]
@@ -65,14 +63,14 @@ socket.on('players_ready',function(data){
   waiterText.innerHTML = myTab;
 });
 
+var selfId = null;
 //===========================================================================[GAME]
 socket.on('start_game', function(data){
   console.log('Yolo');
   waitDiv.style.display = 'none';
   gameDiv.style.display = 'inline-block';
-  socket.emit('canvas_params', {top: ctxElem.getBoundingClientRect().top, left: ctxElem.getBoundingClientRect().left} );
   document.title = 'Forester - ' + data.name + ' team : ' + data.team;
-
+  selfId = data.id;
   gameStart();
 });
 
@@ -89,12 +87,17 @@ document.onkeyup = function(event){
     socket.emit('keyPress',{inputId:code, state:false});
 }
 
-
 var gameStart = function(){
+
+  translateCoord = function(x, y){
+    var rx = x - ctxElem.getBoundingClientRect().top;
+    var ry = y - ctxElem.getBoundingClientRect().left;
+    return {x: rx, y: ry};
+  }
+
   document.onmousedown = function(event){
-    var x = event.clientX;
-    var y = event.clientY;
-    socket.emit('cmd', {inputId:'mouse', state:true, x: x, y: y});
+    var c = translateCoord(event.clientX, event.clientY);
+    socket.emit('cmd', {inputId:'mouse', state:true, x: c.x, y: c.y});
   }
   document.onmouseup = function(event){
     socket.emit('cmd', {inputId:'mouse', state:false});
@@ -144,18 +147,19 @@ var gameStart = function(){
 			delete Tree.list[data.tree[i]];
 		}
 	});
+
+  setInterval(function(){
+  	if(!selfId)
+  		return;
+  	ctx.clearRect(0,0,500,500);
+  	draw_background();
+  	for(var i in Player.list)
+  		Player.list[i].draw();
+  	for(var i in Tree.list)
+  		Tree.list[i].draw();
+    },40);
 }
 
-setInterval(function(){
-	if(!selfId)
-		return;
-	ctx.clearRect(0,0,500,500);
-	draw_background();
-	for(var i in Player.list)
-		Player.list[i].draw();
-	for(var i in Tree.list)
-		Tree.list[i].draw();
-},40);
 
 
 draw_background = function() {

@@ -1,11 +1,16 @@
-var Entity = require("./entity.js").Entity;
 
 function Tree (params){
-  var self = Entity(params, (params.x + '_' + params.y), 'Tree');
-  self.age = params.age || 0;
-  self.ageMax = params.ageMax || 100;
-  self.chopState = 0;
-  self.resistance = 50;
+  var self = {
+    type: 'Tree',
+    x: params.x || -1,
+    y: params.y || -1,
+    id: params.id || (params.x + '_' + params.y) || '',
+    team: params.team || -1,
+    age: params.age || 0,
+    ageMax: params.ageMax || 100,
+    chopState: 0,
+    resistance: 50,
+  }
 
   self.idByCoord = function(coord){
     return coord.x + '_' + coord.y;

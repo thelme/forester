@@ -13,14 +13,13 @@ var io = require('socket.io')(serv,{});
 app.get('/',function(req, res) {
 	res.sendFile(__dirname + '/client/index.html');
 });
+app.get('/js/:file',function(req, res) {
+	res.sendFile(__dirname + '/client/js/' + req.params.file);
+});
 app.use('/client',express.static(__dirname + '/client'));
 
 serv.listen(2000);
 console.log("Server started.");
-
-var GAME_LIST = {};
-var SOCKET_LIST = {};
-
 
 var a_game = new Game( {id: uuid.v4(), name: 'blabla', io: io} );
 a_game.createMapp();

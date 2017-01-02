@@ -18,6 +18,7 @@ function Game(params){
   self.createMapp = function(){
     self.mapp = new Mapp( {x_size: 500, y_size: 500, game: self} );
   }
+
   self.init = function(){
     self.mapp.init();
     self.attributeTeam();
@@ -45,7 +46,8 @@ function Game(params){
 
   self.connect = function(data){
     console.log('[GAME] Hello ' + data.name );
-    self.players[data.socket.id] = new Player({name:data.name, socket:data.socket, whatIsOn: self.whatIsOn, add_a_tree:self.mapp.add_a_tree, get_tree:self.mapp.get_tree});
+    var functions = {whatIsOn: self.whatIsOn, add_a_tree:self.mapp.add_a_tree, get_tree:self.mapp.get_tree};
+    self.players[data.socket.id] = new Player({}, data.name, data.socket, functions);
     self.players[data.socket.id].onConnect();
   }
 
@@ -117,7 +119,7 @@ function Game(params){
 
   self.update_player = function(){
     for(var key in self.players){
-      if (player.toRemove == 2){
+      if (self.players[key].toRemove == 2){
         delete self.players[key];
       } else {
         self.players[key].update();
@@ -130,17 +132,19 @@ function Game(params){
       if (Object.keys(self.players).length != 0){
         self.update_player();
         self.mapp.update();
-        var pack_update    = self.mapp.pack_trees_to_update();
-        pack_update.concat( self.pack_players_to_update() );
 
-        var pack_remove = self.mapp.pack_trees_to_remove();
-        pack_remove.concat( self.pack_players_to_remove() );
+        var pack_rm_player = self.pack_players_to_remove();
+        var pack_rm_tree   = self.mapp.pack_trees_to_remove();
 
-        if (pack_update.length != 0)
-          self.io.sockets.emit('update', pack_update);
+        var pack_update = {
+      		player:self.pack_players_to_update(),
+      		tree:self.mapp.pack_trees_to_update(),
+      	}
 
-        if (pack_remove.length != 0)
-          self.io.sockets.emit('remove', pack_trees_rm);
+        self.io.sockets.emit('update', pack_update);
+
+        if (pack_remove_tree.length != 0 || pack_remove_player.length != 0)
+          self.io.sockets.emit('remove', {player: pack_rm_tree, tree: pack_rm_tree});
 
       } else {
         self.state = WAIT4PLAYSERS;
@@ -162,7 +166,7 @@ function Game(params){
 
   					self.init();
             for (var key in self.players){
-  					  self.players[key].socket.emit('start_game', {name: self.players[key].name, team:self.players[key].team});
+  					  self.players[key].socket.emit('start_game', {name: self.players[key].name, team:self.players[key].team, id:self.players[key].id});
             }
   				}
   			} else {
