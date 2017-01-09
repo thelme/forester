@@ -8,6 +8,7 @@ function Mapp(params){
     x_size : params.x_size,
     y_size : params.y_size,
     game : params.game,
+
     baseMarging : 20,
   }
 
@@ -77,28 +78,37 @@ function Mapp(params){
   }
 
   self.add_a_tree = function(a_new_tree){
+    self.game.initPack.tree.push( a_new_tree );
+    self.game.initPack.toSend = true;
     self.trees[a_new_tree.id] = a_new_tree;
     self.trees[a_new_tree.id].toUpdate = true;
   }
 
-  self.pack_trees_to_remove = function(){
+  self.getAllInitPack = function(){
+  	var trees = [];
+  	for(var i in self.trees)
+  		trees.push(self.trees[i].getInitPack());
+  	return trees;
+  }
+
+  self.getAllRmPack = function(){
     var pack = [];
     for(var key in self.trees){
       var tree = self.trees[key];
       if (tree.toRemove){
-        pack.push(tree);
+        pack.push(tree.id);
         tree.toUpdate = false;
       }
     }
     return pack;
   }
 
-  self.pack_trees_to_update = function(){
+  self.getAllUpdatePack = function(){
     var pack = [];
     for(var key in self.trees){
       var tree = self.trees[key];
       if (tree.toUpdate){
-        pack.push(tree);
+        pack.push(tree.getUpdatePack());
         tree.toUpdate = false;
       }
     }

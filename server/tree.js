@@ -10,6 +10,8 @@ function Tree (params){
     ageMax: params.ageMax || 100,
     chopState: 0,
     resistance: 50,
+    toUpdate: true,
+    toRemove: false,
   }
 
   self.idByCoord = function(coord){
@@ -26,10 +28,35 @@ function Tree (params){
     self.toRemove = (self.chopState >= self.resistance);
   }
 
+  self.getInitPack = function(){
+		return {
+			id:self.id,
+			x:self.x,
+			y:self.y,
+			team:self.team,
+			age:self.age,
+			ageMax:self.ageMax,
+			chopState:self.chopState,
+			resistance:self.resistance,
+		};
+	}
+
+	self.getUpdatePack = function(){
+		return {
+			id:self.id,
+			x:self.x,
+			y:self.y,
+			age:self.age,
+			chopState:self.chopState,
+		}
+	}
+
   self.grow = function(){
     if (self.age < self.ageMax) {
       self.age += 1;
-      self.toUpdate = true;
+      if (self.age == self.ageMax){
+        self.toUpdate = true;
+      }
     }
   }
   return self;

@@ -13,6 +13,7 @@ function Game(params){
     state: WAIT4PLAYSERS,
     i_all_ready : 50,
     io: params.io,
+    initPack : {player:[],tree:[],toSend:false},
 	}
 
   self.createMapp = function(){
@@ -22,6 +23,14 @@ function Game(params){
   self.init = function(){
     self.mapp.init();
     self.attributeTeam();
+    for (var key in self.players){
+      self.players[key].socket.emit('init', {
+        selfId: self.players[key].id,
+        player: self.getAllInitPack(),
+        tree: self.mapp.getAllInitPack(),
+      });
+    }
+
   }
 
   self.attributeTeam = function(){
@@ -49,6 +58,9 @@ function Game(params){
     var functions = {whatIsOn: self.whatIsOn, add_a_tree:self.mapp.add_a_tree, get_tree:self.mapp.get_tree};
     self.players[data.socket.id] = new Player({}, data.name, data.socket, functions);
     self.players[data.socket.id].onConnect();
+
+    self.initPack.player = self.players[data.socket.id].getInitPack();
+    self.initPack.toSend = true;
   }
 
   self.disconnect = function(id){
@@ -92,30 +104,36 @@ function Game(params){
     return retour;
   }
 
-  self.pack_players_to_update = function(){
+  self.getAllUpdatePack = function(){
     var pack = [];
     for(var key in self.players){
       var player = self.players[key];
       if (player.toUpdate){
-        pack.push(player.externaler());
+        pack.push(player.getUpdatePack());
         player.toUpdate = false;
       }
     }
     return pack;
   }
 
-
-  self.pack_players_to_remove = function(){
+  self.getAllRmPack = function(){
     var pack = [];
     for(var key in self.players){
-      var player = self.players[key];
-      if (player.toRemove){
-        pack.push(player.externaler());
-        player.toRemove = 2;
+      if (self.players[key].toRemove){
+        pack.push(self.players[key].id);
+        self.players[key].toRemove = 2;
       }
     }
     return pack;
   }
+
+  self.getAllInitPack = function(){
+  	var players = [];
+  	for(var i in self.players)
+  		players.push(self.players[i].getInitPack());
+  	return players;
+  }
+
 
   self.update_player = function(){
     for(var key in self.players){
@@ -133,17 +151,24 @@ function Game(params){
         self.update_player();
         self.mapp.update();
 
-        var pack_rm_player = self.pack_players_to_remove();
-        var pack_rm_tree   = self.mapp.pack_trees_to_remove();
 
-        var pack_update = {
-      		player:self.pack_players_to_update(),
-      		tree:self.mapp.pack_trees_to_update(),
-      	}
+        var pack_rm_player = self.getAllRmPack();
+        var pack_rm_tree   = self.mapp.getAllRmPack();
 
-        self.io.sockets.emit('update', pack_update);
+        if (self.initPack.toSend){
+          self.io.sockets.emit('init', self.initPack);
+          self.initPack.toSend = false;
+          self.initPack.player = [];
+        	self.initPack.tree = [];
+        }
 
-        if (pack_remove_tree.length != 0 || pack_remove_player.length != 0)
+        self.io.sockets.emit('update', {
+      		player:self.getAllUpdatePack(),
+      		tree:self.mapp.getAllUpdatePack(),
+      	});
+
+
+        if (pack_rm_tree.length != 0 || pack_rm_player.length != 0)
           self.io.sockets.emit('remove', {player: pack_rm_tree, tree: pack_rm_tree});
 
       } else {
@@ -162,12 +187,9 @@ function Game(params){
   					self.i_all_ready -= 1;
   					pack.push( {i: self.i_all_ready } );
   				} else {
-  					self.state = 1;
+  					self.state = RUNNING;
 
   					self.init();
-            for (var key in self.players){
-  					  self.players[key].socket.emit('start_game', {name: self.players[key].name, team:self.players[key].team, id:self.players[key].id});
-            }
   				}
   			} else {
   				self.i_all_ready = 50;

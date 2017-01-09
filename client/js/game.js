@@ -1,6 +1,3 @@
-
-console.log('Game file');
-
 var ctxElem = document.getElementById("ctxId");
 var ctx2D = ctxElem.getContext("2d");
 ctx2D.font = '12px Arial';
@@ -17,7 +14,6 @@ var signDivSignIn = document.getElementById('signDiv-signIn');
 var signDivSignUp = document.getElementById('signDiv-signUp');
 var signDivPassword = document.getElementById('signDiv-password');
 
-console.log('T\'es passé par ici ?');
 signDivSignIn.onclick = function(){
   console.log('sign In of ' + signDivUsername.value );
   socket.emit('signIn',{username:signDivUsername.value,password:signDivPassword.value});
@@ -65,15 +61,6 @@ socket.on('players_ready',function(data){
 
 var selfId = null;
 //===========================================================================[GAME]
-socket.on('start_game', function(data){
-  console.log('Yolo');
-  waitDiv.style.display = 'none';
-  gameDiv.style.display = 'inline-block';
-  document.title = 'Forester - ' + data.name + ' team : ' + data.team;
-  selfId = data.id;
-  gameStart();
-});
-
 document.onkeydown = function(event){
   var codes = {32: 'SPACE', 65:'A', 90:'Z', 69:'E', 82:'R', 80:'P'};
   var code = codes[event.keyCode];
@@ -86,6 +73,24 @@ document.onkeyup = function(event){
   if(code !== undefined)
     socket.emit('keyPress',{inputId:code, state:false});
 }
+
+  socket.on('init',function(data){
+    waitDiv.style.display = 'none';
+    gameDiv.style.display = 'inline-block';
+    document.title = 'Forester - ' + data.name + ' team : ' + data.team;
+
+		if(data.selfId)
+			selfId = data.selfId;
+		for(var i = 0 ; i < data.player.length; i++){
+			new Player(data.player[i], draw_circle);
+		}
+		for(var i = 0 ; i < data.tree.length; i++){
+			new Tree(data.tree[i], draw_circle);
+		}
+
+    gameStart();
+
+	});
 
 var gameStart = function(){
 
@@ -103,16 +108,6 @@ var gameStart = function(){
     socket.emit('cmd', {inputId:'mouse', state:false});
   }
 
-  socket.on('init',function(data){
-		if(data.selfId)
-			selfId = data.selfId;
-		for(var i = 0 ; i < data.player.length; i++){
-			new Player(data.player[i], draw_circle);
-		}
-		for(var i = 0 ; i < data.tree.length; i++){
-			new Tree(data.tree[i]);
-		}
-	});
 
 	socket.on('update',function(data){
 		//{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
@@ -128,30 +123,35 @@ var gameStart = function(){
 		}
 		for(var i = 0 ; i < data.tree.length; i++){
 			var pack = data.tree[i];
-			var b = Tree.list[data.tree[i].id];
+      console.log( 'Update de tree ' + pack.age + '\t = ' + pack.id );
+			var b = Tree.list[pack.id];
 			if(b){
 				if(pack.x !== undefined)
 					b.x = pack.x;
 				if(pack.y !== undefined)
 					b.y = pack.y;
-			}
+				if(pack.age !== undefined)
+					b.age = pack.age;
+				if(pack.resistance !== undefined)
+					b.age = pack.resistance;
+			} 
 		}
 	});
 
 	socket.on('remove',function(data){
 		//{player:[12323],bullet:[12323,123123]}
 		for(var i = 0 ; i < data.player.length; i++){
-			delete Player.list[data.player[i]];
+			delete Player.list[data.player[i].id];
 		}
 		for(var i = 0 ; i < data.tree.length; i++){
-			delete Tree.list[data.tree[i]];
+			delete Tree.list[data.tree[i].id];
 		}
 	});
 
   setInterval(function(){
   	if(!selfId)
   		return;
-  	ctx.clearRect(0,0,500,500);
+  	ctx2D.clearRect(0,0,500,500);
   	draw_background();
   	for(var i in Player.list)
   		Player.list[i].draw();

@@ -5,7 +5,7 @@ function Player (params, name, socket, functions){
     type: 'Player',
     x: params.x || -1,
     y: params.y || -1,
-    id: params.id  || '',
+    id: params.id  || socket.id  || '',
     team: params.team || -1,
     name : name,
     socket : socket,
@@ -70,16 +70,30 @@ function Player (params, name, socket, functions){
     }
   }
 
-  self.externaler = function() {
-    return {name: self.name, team: self.team, x: self.x, y: self.y, toUpdate: self.toUpdate};
-  }
-
   self.getDistance = function(e1, e2){
     var vx = e1.x - e2.x;
     var vy = e1.y - e2.y;
     return Math.sqrt(vx*vx+vy*vy);
   }
 
+  self.getInitPack = function(){
+		return {
+			id:self.id,
+			x:self.x,
+			y:self.y,
+			name:self.name,
+			team:self.team,
+		};
+	}
+
+	self.getUpdatePack = function(){
+		return {
+			id:self.id,
+			x:self.x,
+			y:self.y,
+      toUpdate: self.toUpdate,
+		}
+	}
 
   self.onConnect = function(){
 
