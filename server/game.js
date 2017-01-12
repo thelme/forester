@@ -23,14 +23,13 @@ function Game(params){
   self.init = function(){
     self.mapp.init();
     self.attributeTeam();
-    for (var key in self.players){
+    for(var key in self.players){
       self.players[key].socket.emit('init', {
         selfId: self.players[key].id,
         player: self.getAllInitPack(),
         tree: self.mapp.getAllInitPack(),
       });
     }
-
   }
 
   self.attributeTeam = function(){
@@ -59,7 +58,7 @@ function Game(params){
     self.players[data.socket.id] = new Player({}, data.name, data.socket, functions);
     self.players[data.socket.id].onConnect();
 
-    self.initPack.player = self.players[data.socket.id].getInitPack();
+    self.initPack.player = self.getAllInitPack();
     self.initPack.toSend = true;
   }
 
@@ -94,23 +93,15 @@ function Game(params){
         retour.push(p);
       }
     }
-    // for(var key in self.mapp.bases){
-    //   var p = self.mapp.bases[key];
-    //   if (self.getDistance(data, p) < distance){
-    //     retour.push(p);
-    //   }
-    // }
-    //console.log(retour);
     return retour;
   }
 
   self.getAllUpdatePack = function(){
     var pack = [];
     for(var key in self.players){
-      var player = self.players[key];
-      if (player.toUpdate){
-        pack.push(player.getUpdatePack());
-        player.toUpdate = false;
+      if (self.players[key].toUpdate){
+        pack.push(self.players[key].getUpdatePack());
+        self.players[key].toUpdate = false;
       }
     }
     return pack;
@@ -134,18 +125,25 @@ function Game(params){
   	return players;
   }
 
-
   self.update_player = function(){
     for(var key in self.players){
       if (self.players[key].toRemove == 2){
         delete self.players[key];
+        console.log("Suppresion d'un utilisateur");
       } else {
         self.players[key].update();
       }
     }
   }
 
+
+  self.i = 0;
   self.update = function(){
+    self.i++;
+
+    if ( (self.i%40.0) == 0)
+      console.log('UP time ' + self.i/4.0 );
+
     if (self.state == RUNNING){
       if (Object.keys(self.players).length != 0){
         self.update_player();
@@ -156,6 +154,7 @@ function Game(params){
         var pack_rm_tree   = self.mapp.getAllRmPack();
 
         if (self.initPack.toSend){
+          console.log('WTF ' + self.initPack.toSend + ' : ' + self.initPack.tree);
           self.io.sockets.emit('init', self.initPack);
           self.initPack.toSend = false;
           self.initPack.player = [];
@@ -163,13 +162,13 @@ function Game(params){
         }
 
         self.io.sockets.emit('update', {
-      		player:self.getAllUpdatePack(),
-      		tree:self.mapp.getAllUpdatePack(),
-      	});
+        		player:self.getAllUpdatePack(),
+        		tree:self.mapp.getAllUpdatePack(),
+        	});
 
-
-        if (pack_rm_tree.length != 0 || pack_rm_player.length != 0)
+        if (pack_rm_tree.length != 0 || pack_rm_player.length != 0){
           self.io.sockets.emit('remove', {player: pack_rm_tree, tree: pack_rm_tree});
+        }
 
       } else {
         self.state = WAIT4PLAYSERS;
@@ -178,10 +177,17 @@ function Game(params){
   		if (Object.keys(self.players).length != 0){
   			var pack = [];
   			var all_ready = 1;
+
+        for(var key in self.players){
+          if (self.players[key].toRemove)
+            delete self.players[key];
+        }
+
   			for(var key in self.players){
   				pack.push( {name: self.players[key].name, isReady: self.players[key].isReady} );
   				all_ready = (self.players[key].isReady) ? all_ready : 0;
   			}
+
   			if(all_ready != 0){
   				if (self.i_all_ready > 0){
   					self.i_all_ready -= 1;

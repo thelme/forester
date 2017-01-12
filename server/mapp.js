@@ -49,28 +49,21 @@ function Mapp(params){
         var angle = 2*Math.PI*i_tree/n_trees;
         var x = base.x + self.baseMarging/2*Math.cos(angle);
         var y = base.y + self.baseMarging/2*Math.sin(angle);
-        var a_new_tree = Tree({x: x, y: y, team: base.team, age:Math.random()*75});
+        var a_new_tree = Tree({x: x, y: y, team: base.team, age:Math.ceil(Math.random()*90)});
         self.trees[a_new_tree.id] = a_new_tree;
       }
     }
   }
 
   self.update = function(){
-    var i = 0;
-    var log = '';
     for(var key in self.trees){
-      // log += '  (' + i;
-      // log += ' ' + self.trees[key].chopState;
-      // log += ' ' + self.trees[key].toRemove;
-      // log += ' ' + self.trees[key].toUpdate;
-      // i ++;
       if (self.trees[key].toRemove && !self.trees[key].toUpdate){
+        console.log("Destructionnn ");
         delete self.trees[key];
       } else {
         self.trees[key].update();
       }
     }
-    // console.log(log);
   }
 
   self.get_tree = function(coord){
@@ -81,7 +74,6 @@ function Mapp(params){
     self.game.initPack.tree.push( a_new_tree );
     self.game.initPack.toSend = true;
     self.trees[a_new_tree.id] = a_new_tree;
-    self.trees[a_new_tree.id].toUpdate = true;
   }
 
   self.getAllInitPack = function(){
@@ -96,7 +88,7 @@ function Mapp(params){
     for(var key in self.trees){
       var tree = self.trees[key];
       if (tree.toRemove){
-        pack.push(tree.id);
+        pack.push({id: tree.id});
         tree.toUpdate = false;
       }
     }
@@ -107,7 +99,7 @@ function Mapp(params){
     var pack = [];
     for(var key in self.trees){
       var tree = self.trees[key];
-      if (tree.toUpdate){
+      if (tree.toUpdate && !tree.toRemove){
         pack.push(tree.getUpdatePack());
         tree.toUpdate = false;
       }

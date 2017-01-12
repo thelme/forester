@@ -25,13 +25,17 @@ var a_game = new Game( {id: uuid.v4(), name: 'blabla', io: io} );
 a_game.createMapp();
 
 var isUsernameTaken = function(data,cb){
-	var isTaken = false;
-	for(var key in a_game.players){
-		if (a_game.players[key].name == data.username){
-			isTaken = true;
+	if (data.username == ''){
+		cb(false);
+	} else {
+		var isTaken = false;
+		for(var key in a_game.players){
+			if (a_game.players[key].name == data.username){
+				isTaken = true;
+			}
 		}
+		cb(isTaken);
 	}
-	cb(isTaken);
 }
 
 io.sockets.on('connection', function(socket){

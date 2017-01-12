@@ -62,6 +62,9 @@ socket.on('players_ready',function(data){
 var selfId = null;
 //===========================================================================[GAME]
 document.onkeydown = function(event){
+  if (signDiv.style.display != 'none' && event.keyCode == 13){
+    document.getElementById('signDiv-signIn').click();
+  }
   var codes = {32: 'SPACE', 65:'A', 90:'Z', 69:'E', 82:'R', 80:'P'};
   var code = codes[event.keyCode];
   if(code !== undefined)
@@ -74,23 +77,29 @@ document.onkeyup = function(event){
     socket.emit('keyPress',{inputId:code, state:false});
 }
 
-  socket.on('init',function(data){
-    waitDiv.style.display = 'none';
-    gameDiv.style.display = 'inline-block';
-    document.title = 'Forester - ' + data.name + ' team : ' + data.team;
+var gameStarted = false;
+socket.on('init',function(data){
+  console.log("WTF");
+  waitDiv.style.display = 'none';
+  gameDiv.style.display = 'inline-block';
+  document.title = 'Forester - ' + data.name + ' team : ' + data.team;
 
-		if(data.selfId)
-			selfId = data.selfId;
-		for(var i = 0 ; i < data.player.length; i++){
-			new Player(data.player[i], draw_circle);
-		}
-		for(var i = 0 ; i < data.tree.length; i++){
-			new Tree(data.tree[i], draw_circle);
-		}
+	if(data.selfId)
+		selfId = data.selfId;
 
+	for(var i = 0 ; i < data.player.length; i++){
+		new Player(data.player[i], draw_circle);
+	}
+	for(var i = 0 ; i < data.tree.length; i++){
+		new Tree(data.tree[i], draw_circle);
+	}
+
+  if (!gameStarted){
     gameStart();
+    gameStarted = true;
+  }
 
-	});
+});
 
 var gameStart = function(){
 
@@ -108,7 +117,6 @@ var gameStart = function(){
     socket.emit('cmd', {inputId:'mouse', state:false});
   }
 
-
 	socket.on('update',function(data){
 		//{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
 		for(var i = 0 ; i < data.player.length; i++){
@@ -123,7 +131,7 @@ var gameStart = function(){
 		}
 		for(var i = 0 ; i < data.tree.length; i++){
 			var pack = data.tree[i];
-      console.log( 'Update de tree ' + pack.age + '\t = ' + pack.id );
+      console.log( i + ' Update de tree ' + pack.age + '\t = ' + pack.id );
 			var b = Tree.list[pack.id];
 			if(b){
 				if(pack.x !== undefined)
@@ -133,8 +141,10 @@ var gameStart = function(){
 				if(pack.age !== undefined)
 					b.age = pack.age;
 				if(pack.resistance !== undefined)
-					b.age = pack.resistance;
-			} 
+          b.resistance = pack.resistance;
+				if(pack.chopState !== undefined)
+          b.chopState = pack.chopState;
+			}
 		}
 	});
 
@@ -148,19 +158,24 @@ var gameStart = function(){
 		}
 	});
 
-  setInterval(function(){
-  	if(!selfId)
-  		return;
-  	ctx2D.clearRect(0,0,500,500);
-  	draw_background();
-  	for(var i in Player.list)
-  		Player.list[i].draw();
-  	for(var i in Tree.list)
-  		Tree.list[i].draw();
-    },40);
 }
 
 
+setInterval(function(){
+	if(!selfId)
+		return;
+
+  for(var i in Tree.list)
+    Tree.list[i].update();
+
+	ctx2D.clearRect(0,0,500,500);
+	draw_background();
+	for(var i in Player.list)
+		Player.list[i].draw();
+	for(var i in Tree.list)
+		Tree.list[i].draw();
+
+  },1000/25);
 
 draw_background = function() {
   ctx2D.save();
