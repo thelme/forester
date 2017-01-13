@@ -23,9 +23,11 @@ function Game(params){
   self.init = function(){
     self.mapp.init();
     self.attributeTeam();
+    console.log('Size Mapp : ' + self.mapp.x_size + ' ' + self.mapp.y_size);
     for(var key in self.players){
       self.players[key].socket.emit('init', {
         selfId: self.players[key].id,
+        size_mapp: {x: self.mapp.x_size, y: self.mapp.y_size},
         player: self.getAllInitPack(),
         tree: self.mapp.getAllInitPack(),
       });

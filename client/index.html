@@ -19,12 +19,16 @@
     </div>
 
     <div id="gameDiv" style="display:none;">
-    	<canvas id="ctxId" width="500" height="500" style="border:1px solid #000000;"></canvas>
+    	<!--
+        <svg id="ctxId"  width="500" height="500" >   </svg>
+    -->
+      <canvas id="ctxId" width="500" height="500"  style="border:1px solid #000000;"></canvas>
     </div>
 
   </body>
-
-  <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <!--<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>-->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="./js/scaler.js"></script>
   <script src="./js/entity.js"></script>
   <script src="./js/player.js"></script>
   <script src="./js/tree.js"></script>
