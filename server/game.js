@@ -151,12 +151,10 @@ function Game(params){
         self.update_player();
         self.mapp.update();
 
-
         var pack_rm_player = self.getAllRmPack();
         var pack_rm_tree   = self.mapp.getAllRmPack();
 
         if (self.initPack.toSend){
-          console.log('WTF ' + self.initPack.toSend + ' : ' + self.initPack.tree);
           self.io.sockets.emit('init', self.initPack);
           self.initPack.toSend = false;
           self.initPack.player = [];

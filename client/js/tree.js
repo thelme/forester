@@ -8,7 +8,7 @@ function Tree (params, drawerFoo){
   self.iT = 0;
 
   self.draw = function() {
-    c = my_scaler.mapp2screen(self);
+    c = Scaler.my_scaler.mapp2screen(self);
 
     fillStyles  = {0:'#489edf', 1:'#d64e4e', 2:'#fbf22d', 3:'#eb84ff'};
     strokeStyle = ( self.chopState == 0 ) ? '#84d055' : '#bce5a2'; //'#64a035';

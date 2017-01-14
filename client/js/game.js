@@ -83,8 +83,9 @@ document.onkeyup = function(event){
 var gameStarted = false;
 socket.on('init',function(data){
 
+
 	for(var i = 0 ; i < data.player.length; i++){
-		new Player(data.player[i], draw_circle);
+		new Player(data.player[i], draw_circle, write_test);
 	}
 	for(var i = 0 ; i < data.tree.length; i++){
 		new Tree(data.tree[i], draw_circle);
@@ -92,17 +93,17 @@ socket.on('init',function(data){
 
   waitDiv.style.display = 'none';
   gameDiv.style.display = 'inline-block';
-
   canvas.width  = document.body.clientWidth;
   canvas.height = document.body.clientHeight;
 
-  if (data.size_mapp != undefined)
-    my_scaler = new Scaler({size_player_screen: {x: canvas.width, y: canvas.height}, size_mapp: data.size_mapp });
+  if (data.size_mapp != undefined){
+    console.log("Size mapp " + data.size_mapp.x + " " + data.size_mapp.y);
+    Scaler.my_scaler = new Scaler({size_player_screen: {x: canvas.width, y: canvas.height}, size_mapp: data.size_mapp });
+  }
 
 	if(data.selfId){
 		selfId = data.selfId;
-    console.log('Datalalal ' + Player.list[data.selfId].x + ' ' + Player.list[data.selfId].y );
-    my_scaler.setPosPlayerScreen(Player.list[data.selfId]);
+    Scaler.my_scaler.setPosPlayerScreen(Player.list[data.selfId]);
     //document.title = 'Forester - ' + data.player[data.selfId].name + ' team : ' + data.player[data.selfId].team;
   }
 
@@ -124,7 +125,7 @@ var gameStart = function(){
 
   document.onmousedown = function(event){
     var c = translateCoord(event.clientX, event.clientY);
-    c = my_scaler.screen2mapp(c);
+    c = Scaler.my_scaler.screen2mapp(c);
     socket.emit('cmd', {inputId:'mouse', state:true, x: c.x, y: c.y});
   }
   document.onmouseup = function(event){
@@ -178,13 +179,11 @@ setInterval(function(){
   if(!selfId)
   	return;
 
-
-  my_scaler.movePosPlayerScreen(Player.list[selfId]);
+  //Scaler.my_scaler.movePosPlayerScreen(Player.list[selfId]);
 
   for(var i in Tree.list)
     Tree.list[i].update();
 
-  ctx2D.clearRect(0,0,500,500);
   draw_background();
   for(var i in Player.list)
   	Player.list[i].draw();
@@ -195,9 +194,15 @@ setInterval(function(){
 
 draw_background = function() {
   ctx2D.save();
-  ctx2D.clearRect(0,0,500,500);
+  ctx2D.clearRect(0,0,canvas.width, canvas.height);
   ctx2D.fillStyle = groundColor;
   ctx2D.fill();
+  ctx2D.restore();
+}
+
+write_test = function(x, y, data){
+  ctx2D.save();
+  ctx2D.fillText(data, x, y);
   ctx2D.restore();
 }
 
