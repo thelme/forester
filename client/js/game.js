@@ -4,8 +4,16 @@ ctx2D.font = '12px Arial';
 
 var groundColor = '#ffffff';
 
+//===========================================================================[THREE]
+var container, stats;
+var camera, scene, renderer;
+
 var socket = io();
 var waiterText = document.getElementById('waiter-text');
+
+
+//https://github.com/mrdoob/three.js/blob/dev/examples/canvas_interactive_particles.html
+//https://www.youtube.com/watch?v=Zpo4xcDHAL4
 
 //===========================================================================[SIGN]
 var signDiv = document.getElementById('signDiv');
