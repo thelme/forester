@@ -23,9 +23,11 @@ function Game(params){
   self.init = function(){
     self.mapp.init();
     self.attributeTeam();
+    console.log('Size Mapp : ' + self.mapp.x_size + ' ' + self.mapp.y_size);
     for(var key in self.players){
       self.players[key].socket.emit('init', {
         selfId: self.players[key].id,
+        size_mapp: {x: self.mapp.x_size, y: self.mapp.y_size},
         player: self.getAllInitPack(),
         tree: self.mapp.getAllInitPack(),
       });
@@ -149,12 +151,10 @@ function Game(params){
         self.update_player();
         self.mapp.update();
 
-
         var pack_rm_player = self.getAllRmPack();
         var pack_rm_tree   = self.mapp.getAllRmPack();
 
         if (self.initPack.toSend){
-          console.log('WTF ' + self.initPack.toSend + ' : ' + self.initPack.tree);
           self.io.sockets.emit('init', self.initPack);
           self.initPack.toSend = false;
           self.initPack.player = [];
